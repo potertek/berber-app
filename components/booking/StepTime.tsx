@@ -1,40 +1,84 @@
-import { formatDate } from '@/lib/utils'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { TIME_SLOTS } from '@/types'
+import { formatDateTR } from '@/lib/utils'
+import type { Shop, StaffMember } from '@/types'
 
 interface Props {
-  slots: string[]
-  selected: string
+  shop: Shop
+  staff: StaffMember | null
   date: string
+  selected: string
   onSelect: (time: string) => void
 }
 
-export default function StepTime({ slots, selected, date, onSelect }: Props) {
+export function StepTime({ shop, staff, date, selected, onSelect }: Props) {
+  const [takenSlots, setTakenSlots] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      const query = supabase
+        .from('appointments')
+        .select('time_slot')
+        .eq('shop_id', shop.id)
+        .eq('date', date)
+        .in('status', ['pending', 'approved'])
+
+      if (staff) query.eq('staff_id', staff.id)
+
+      const [apptResult, blockedResult] = await Promise.all([
+        query,
+        supabase
+          .from('blocked_slots')
+          .select('time_slot')
+          .eq('shop_id', shop.id)
+          .eq('date', date)
+          .match(staff ? { staff_id: staff.id } : {}),
+      ])
+
+      const taken = [
+        ...(apptResult.data ?? []).map(a => a.time_slot),
+        ...(blockedResult.data ?? []).map(b => b.time_slot),
+      ]
+      setTakenSlots(taken)
+      setLoading(false)
+    }
+    load()
+  }, [shop.id, date, staff])
+
   return (
-    <div className="px-4 py-6">
-      <h2 className="text-lg font-bold text-gray-900 mb-1">Saat Seçin</h2>
-      {date && <p className="text-sm text-gray-400 mb-4">{formatDate(date)}</p>}
-      {slots.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="font-medium">Bu tarih için uygun saat yok</p>
-          <p className="text-xs mt-1">Lütfen farklı bir tarih seçin</p>
-        </div>
+    <div className="px-4 py-5 animate-slide-up">
+      <h3 className="text-base font-black text-brand-black mb-1">Saat Seç</h3>
+      <p className="text-xs text-gray-400 mb-4">{formatDateTR(date)}</p>
+
+      {loading ? (
+        <div className="text-center py-8 text-sm text-gray-400">Yükleniyor...</div>
       ) : (
-        <div className="grid grid-cols-3 gap-3">
-          {slots.map((slot) => (
-            <button
-              key={slot}
-              onClick={() => onSelect(slot)}
-              className={`py-3 rounded-2xl border-2 font-semibold text-sm transition-all ${
-                selected === slot
-                  ? 'border-brand-green bg-brand-green text-white'
-                  : 'border-gray-100 bg-white text-gray-700 hover:border-brand-green/40'
-              }`}
-            >
-              {slot}
-            </button>
-          ))}
+        <div className="grid grid-cols-3 gap-2">
+          {TIME_SLOTS.map(slot => {
+            const isTaken = takenSlots.includes(slot)
+            const isSelected = selected === slot
+            return (
+              <button
+                key={slot}
+                disabled={isTaken}
+                onClick={() => onSelect(slot)}
+                className={`py-3.5 rounded-2xl border-2 text-sm font-bold transition-all ${
+                  isTaken
+                    ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed line-through'
+                    : isSelected
+                    ? 'border-brand-orange bg-brand-orange text-white'
+                    : 'border-gray-100 hover:border-brand-orange/50 bg-white text-brand-black'
+                }`}
+              >
+                {slot}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

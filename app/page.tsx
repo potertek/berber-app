@@ -1,37 +1,21 @@
-import HeroSection from '@/components/HeroSection'
-import ServicesSection from '@/components/ServicesSection'
-import WorkingHoursSection from '@/components/WorkingHoursSection'
-import ReviewsSection from '@/components/ReviewsSection'
-import InstagramSection from '@/components/InstagramSection'
-import ContactSection from '@/components/ContactSection'
-import StickyBookingBar from '@/components/StickyBookingBar'
-import NavTabs from '@/components/NavTabs'
+import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <>
-      <NavTabs />
-      <main className="pb-28">
-        <section id="profil">
-          <HeroSection />
-        </section>
-        <section id="hizmetler" className="px-4 py-6">
-          <ServicesSection />
-        </section>
-        <section id="adres" className="px-4 py-6 border-t border-gray-100">
-          <WorkingHoursSection />
-          <div className="mt-6">
-            <ContactSection />
-          </div>
-        </section>
-        <section id="yorumlar" className="px-4 py-6 border-t border-gray-100">
-          <ReviewsSection />
-        </section>
-        <section id="instagram" className="px-4 py-6 border-t border-gray-100">
-          <InstagramSection />
-        </section>
-      </main>
-      <StickyBookingBar />
-    </>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-brand-black text-white px-6">
+      <div className="text-center">
+        <div className="text-5xl mb-4">✂️</div>
+        <h1 className="text-3xl font-black mb-2">Barber SaaS</h1>
+        <p className="text-white/60 mb-8">Premium berber randevu platformu</p>
+        <div className="space-y-3">
+          <Link
+            href="/superadmin"
+            className="block w-full bg-brand-orange text-white font-bold py-3 px-8 rounded-xl hover:bg-brand-orange-light transition-colors"
+          >
+            Super Admin
+          </Link>
+        </div>
+      </div>
+    </div>
   )
 }

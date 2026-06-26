@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Ozan Cin Hair Art Studio',
-  description: 'Premium erkek kuaförü — online randevu sistemi',
+  title: 'Barber SaaS',
+  description: 'Premium berber randevu sistemi',
 }
 
 export const viewport: Viewport = {
@@ -15,10 +15,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
-      <body className="min-h-screen bg-gray-50">
-        <div className="max-w-md mx-auto bg-white min-h-screen relative">
-          {children}
-        </div>
+      <body className="min-h-screen bg-gray-100">
+        {children}
       </body>
     </html>
   )
