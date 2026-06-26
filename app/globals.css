@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-green: #2d7a4f;
+  --brand-green-light: #3a9660;
+  --brand-green-dark: #1e5c39;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f8f8f8;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  .btn-primary {
+    @apply bg-brand-green text-white font-semibold py-3 px-6 rounded-xl
+           hover:bg-brand-green-light active:bg-brand-green-dark
+           transition-all duration-200 shadow-sm;
+  }
+  .btn-outline {
+    @apply border-2 border-brand-green text-brand-green font-semibold py-3 px-6
+           rounded-xl hover:bg-brand-green hover:text-white
+           transition-all duration-200;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100;
+  }
+  .section-title {
+    @apply text-lg font-bold text-gray-900 mb-4;
+  }
+}
