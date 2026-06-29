@@ -14,7 +14,8 @@ const NAV_ITEMS = [
   { href: '/services', label: 'Hizmetler', icon: '✂️' },
   { href: '/staff', label: 'Ekip', icon: '👥' },
   { href: '/revenue', label: 'Gelir', icon: '💰' },
-  { href: '/settings', label: 'Düzenle', icon: '✏️' },
+  { href: '/duzenle', label: 'Düzenle', icon: '✏️' },
+  { href: '/settings', label: 'Ayarlar', icon: '⚙️' },
 ]
 
 export function AdminNav({ slug }: Props) {

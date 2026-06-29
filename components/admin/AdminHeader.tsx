@@ -27,16 +27,16 @@ export function AdminHeader({ shop }: Props) {
           <p className="text-xs text-white/50">Admin Panel</p>
         </div>
         <Link
-          href={`/${shop.slug}/panel/settings`}
+          href={`/${shop.slug}/panel/duzenle`}
           className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg font-medium transition-colors"
         >
-          ⚙️ Ayarlar
+          ✏️ Düzenle
         </Link>
       </div>
 
       {/* Randevu Sayfasını Düzenle — büyük ve belirgin */}
       <Link
-        href={`/${shop.slug}/panel/settings`}
+        href={`/${shop.slug}/panel/duzenle`}
         className="block w-full bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl px-4 py-3 mb-3 transition-all text-center font-bold text-sm"
       >
         ✏️ Randevu Sayfasını Düzenle
