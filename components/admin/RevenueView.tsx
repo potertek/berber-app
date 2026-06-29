@@ -84,7 +84,7 @@ export function RevenueView({ shop, appointments, walkIns, staff }: Props) {
             <p className="text-xs text-gray-400">{filteredAppts.length} randevu</p>
           </Card>
           <Card className="text-center">
-            <p className="text-xs text-gray-400 mb-1">Walk-in</p>
+            <p className="text-xs text-gray-400 mb-1">Kapıdan Gelen</p>
             <p className="text-xl font-black text-brand-black">{formatCurrency(walkInRevenue)}</p>
             <p className="text-xs text-gray-400">{filteredWalkIns.length} kayıt</p>
           </Card>
