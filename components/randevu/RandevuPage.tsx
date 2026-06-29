@@ -93,7 +93,7 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
       const { error: err } = await supabase.from('appointments').insert({
         shop_id: shop.id, staff_id: selectedStaff.id, service_id: booking.service!.id,
         customer_name: booking.name, customer_phone: booking.phone,
-        date: booking.date, time_slot: booking.time, status: 'pending', booking_code: code, notes: null,
+        date: booking.date, time_slot: booking.time, status: 'approved', booking_code: code, notes: null,
       })
       if (err) throw err
       setBooking(b => ({ ...b, code }))
@@ -304,23 +304,62 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
 
               {/* INSTAGRAM */}
               {(shop.instagram_url || shop.instagram_username) && (
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-soft p-4">
-                  <a href={shop.instagram_url ?? `https://instagram.com/${shop.instagram_username}`} target="_blank" rel="noreferrer" className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center text-white text-xl flex-shrink-0">
-                      {shop.instagram_photo_url
-                        ? <Image src={shop.instagram_photo_url} alt="ig" width={48} height={48} className="rounded-full object-cover" />
-                        : '📷'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {shop.instagram_username && <p className="font-bold text-sm">@{shop.instagram_username}</p>}
-                      {shop.instagram_bio && <p className="text-xs text-gray-500 truncate">{shop.instagram_bio}</p>}
-                      <div className="flex gap-3 mt-1">
-                        {shop.instagram_posts != null && <span className="text-xs text-gray-400"><strong className="text-gray-700">{shop.instagram_posts}</strong> gönderi</span>}
-                        {shop.instagram_followers != null && <span className="text-xs text-gray-400"><strong className="text-gray-700">{shop.instagram_followers.toLocaleString()}</strong> takipçi</span>}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-soft overflow-hidden">
+                  {/* Üst gradient şerit */}
+                  <div className="h-1.5 bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400" />
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 p-0.5 flex-shrink-0">
+                        <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                          {shop.instagram_photo_url
+                            ? <Image src={shop.instagram_photo_url} alt="ig" width={56} height={56} className="rounded-full object-cover" />
+                            : <span className="text-2xl">📷</span>}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {shop.instagram_username && (
+                          <p className="font-bold text-sm text-gray-900">@{shop.instagram_username}</p>
+                        )}
+                        {shop.instagram_bio && (
+                          <p className="text-xs text-gray-500 mt-0.5">{shop.instagram_bio}</p>
+                        )}
                       </div>
                     </div>
-                    <span className="text-gray-300">→</span>
-                  </a>
+
+                    {/* İstatistikler */}
+                    {(shop.instagram_posts != null || shop.instagram_followers != null || shop.instagram_following != null) && (
+                      <div className="flex justify-around border border-gray-100 rounded-xl py-2.5 mb-3">
+                        {shop.instagram_posts != null && (
+                          <div className="text-center">
+                            <p className="font-black text-sm text-gray-900">{shop.instagram_posts}</p>
+                            <p className="text-xs text-gray-400">Gönderi</p>
+                          </div>
+                        )}
+                        {shop.instagram_followers != null && (
+                          <div className="text-center">
+                            <p className="font-black text-sm text-gray-900">{shop.instagram_followers.toLocaleString()}</p>
+                            <p className="text-xs text-gray-400">Takipçi</p>
+                          </div>
+                        )}
+                        {shop.instagram_following != null && (
+                          <div className="text-center">
+                            <p className="font-black text-sm text-gray-900">{shop.instagram_following}</p>
+                            <p className="text-xs text-gray-400">Takip</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Takip Et butonu */}
+                    <a
+                      href={shop.instagram_url ?? `https://instagram.com/${shop.instagram_username}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-sm font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 hover:opacity-90 transition-opacity"
+                    >
+                      {shop.instagram_cta_text ?? "Instagram'da Takip Et"}
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
@@ -505,7 +544,7 @@ function SuccessScreen({ booking, shop, accent }: { booking: BookingSummary; sho
         <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl"
           style={{ backgroundColor: `${approvedColor}20`, color: approvedColor }}>✓</div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">Randevu Alındı!</h2>
-        <p className="text-sm text-gray-500 mb-6">Randevunuz onay bekliyor. Kodunuzu saklayın.</p>
+        <p className="text-sm text-gray-500 mb-6">Randevunuz onaylandı! Kodunuzu saklayın, iptal için gerekli.</p>
         <div className="bg-gray-50 rounded-xl p-4 mb-6">
           <p className="text-xs text-gray-400 mb-1">Randevu Kodunuz</p>
           <p className="text-3xl font-black tracking-widest" style={{ color: accent }}>{booking.code}</p>
