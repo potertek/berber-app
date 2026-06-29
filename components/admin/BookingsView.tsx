@@ -4,31 +4,72 @@ import { useState } from 'react'
 import { AdminHeader } from './AdminHeader'
 import { AdminNav } from './AdminNav'
 import { Card } from '@/components/ui/Card'
-import { formatDateTR, formatCurrency } from '@/lib/utils'
-import { STATUS_LABELS, STATUS_COLORS } from '@/types'
-import type { Shop, Appointment, BookingStatus } from '@/types'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import { formatDateTR, formatCurrency, generateBookingCode, getTodayString } from '@/lib/utils'
+import { STATUS_LABELS, STATUS_COLORS, TIME_SLOTS } from '@/types'
+import type { Shop, Appointment, BookingStatus, Service, StaffMember } from '@/types'
 import { supabase } from '@/lib/supabase'
 
 type FilterStatus = 'all' | BookingStatus
-type ViewMode = 'list' | 'calendar'
 
 interface Props {
   shop: Shop
   appointments: Appointment[]
+  services: Service[]
+  staff: StaffMember[]
 }
 
-export function BookingsView({ shop, appointments: init }: Props) {
+export function BookingsView({ shop, appointments: init, services, staff }: Props) {
   const [appts, setAppts] = useState(init)
   const [filter, setFilter] = useState<FilterStatus>('all')
-  const [view, setView] = useState<ViewMode>('list')
+  const [showForm, setShowForm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    customer_name: '',
+    customer_phone: '',
+    service_id: services[0]?.id ?? '',
+    staff_id: staff[0]?.id ?? '',
+    date: getTodayString(),
+    time_slot: '09:00',
+  })
 
-  const filtered = appts.filter(a => filter === 'all' || a.status === filter)
+  const filtered = appts
+    .filter(a => filter === 'all' || a.status === filter)
     .sort((a, b) => `${b.date} ${b.time_slot}`.localeCompare(`${a.date} ${a.time_slot}`))
 
   async function updateStatus(id: string, status: string) {
     await supabase.from('appointments').update({ status }).eq('id', id)
     setAppts(prev => prev.map(a => a.id === id ? { ...a, status: status as BookingStatus } : a))
   }
+
+  async function addManual(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.customer_name || !form.customer_phone || !form.service_id || !form.staff_id) return
+    setSaving(true)
+    const code = generateBookingCode()
+    const { data, error } = await supabase.from('appointments').insert({
+      shop_id: shop.id,
+      staff_id: form.staff_id,
+      service_id: form.service_id,
+      customer_name: form.customer_name,
+      customer_phone: form.customer_phone,
+      date: form.date,
+      time_slot: form.time_slot,
+      status: 'approved',
+      booking_code: code,
+      notes: 'Manuel eklendi',
+    }).select('*, staff:staff(*), service:services(*)').single()
+
+    if (!error && data) {
+      setAppts(prev => [data as Appointment, ...prev])
+      setForm({ customer_name: '', customer_phone: '', service_id: services[0]?.id ?? '', staff_id: staff[0]?.id ?? '', date: getTodayString(), time_slot: '09:00' })
+      setShowForm(false)
+    }
+    setSaving(false)
+  }
+
+  const accent = shop.theme_accent ?? '#C85A17'
 
   return (
     <div>
@@ -37,31 +78,96 @@ export function BookingsView({ shop, appointments: init }: Props) {
 
       <div className="px-4 py-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-black text-brand-black">Randevular</h2>
-          <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
-            {(['list', 'calendar'] as ViewMode[]).map(m => (
-              <button
-                key={m}
-                onClick={() => setView(m)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${view === m ? 'bg-white text-brand-black shadow-sm' : 'text-gray-400'}`}
-              >
-                {m === 'list' ? '≡ Liste' : '🗓 Takvim'}
-              </button>
-            ))}
-          </div>
+          <h2 className="font-black text-gray-900">Randevular</h2>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="text-xs text-white font-bold px-3 py-2 rounded-xl"
+            style={{ backgroundColor: accent }}
+          >
+            {showForm ? 'İptal' : '+ Manuel Ekle'}
+          </button>
         </div>
 
-        {/* Filter */}
+        {/* Manuel randevu formu */}
+        {showForm && (
+          <Card className="mb-4">
+            <h3 className="font-bold text-sm mb-3 text-gray-900">Telefon Randevusu Ekle</h3>
+            <form onSubmit={addManual} className="space-y-3">
+              <Input
+                label="Müşteri Adı *"
+                placeholder="Ad Soyad"
+                value={form.customer_name}
+                onChange={e => setForm(f => ({ ...f, customer_name: e.target.value }))}
+                required
+              />
+              <Input
+                label="Telefon *"
+                placeholder="05XX XXX XX XX"
+                type="tel"
+                value={form.customer_phone}
+                onChange={e => setForm(f => ({ ...f, customer_phone: e.target.value }))}
+                required
+              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Hizmet *</label>
+                <select
+                  value={form.service_id}
+                  onChange={e => setForm(f => ({ ...f, service_id: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-orange outline-none text-sm"
+                >
+                  {services.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} — {s.price}₺</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Berber *</label>
+                <select
+                  value={form.staff_id}
+                  onChange={e => setForm(f => ({ ...f, staff_id: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-orange outline-none text-sm"
+                >
+                  {staff.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Tarih *</label>
+                  <input
+                    type="date"
+                    value={form.date}
+                    onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-orange outline-none text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Saat *</label>
+                  <select
+                    value={form.time_slot}
+                    onChange={e => setForm(f => ({ ...f, time_slot: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-brand-orange outline-none text-sm"
+                  >
+                    {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <Button type="submit" loading={saving} className="w-full">Randevuyu Kaydet</Button>
+            </form>
+          </Card>
+        )}
+
+        {/* Filtre */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-          {(['all', 'pending', 'approved', 'rejected', 'cancelled'] as FilterStatus[]).map(f => {
-            const labels = { all: 'Tümü', ...STATUS_LABELS }
+          {(['all', 'approved', 'pending', 'cancelled', 'rejected'] as FilterStatus[]).map(f => {
+            const labels: Record<FilterStatus, string> = { all: 'Tümü', approved: 'Onaylı', pending: 'Bekleyen', cancelled: 'İptal', rejected: 'Reddedildi' }
             return (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                  filter === f ? 'bg-brand-orange text-white' : 'bg-gray-100 text-gray-500'
-                }`}
+                className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                style={filter === f ? { backgroundColor: accent, color: 'white' } : { backgroundColor: '#f3f4f6', color: '#6b7280' }}
               >
                 {labels[f]}
               </button>
@@ -79,39 +185,37 @@ export function BookingsView({ shop, appointments: init }: Props) {
                   <span className={`text-xs px-2.5 py-1 rounded-full border font-semibold ${STATUS_COLORS[a.status]}`}>
                     {STATUS_LABELS[a.status]}
                   </span>
-                  <span className="text-xs text-gray-400">{a.booking_code}</span>
+                  <span className="text-xs text-gray-300">{a.booking_code}</span>
                 </div>
-                <p className="font-bold text-sm text-brand-black">{a.customer_name}</p>
+                <p className="font-bold text-sm text-gray-900">{a.customer_name}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{a.service?.name} • {a.staff?.name}</p>
-                <p className="text-xs text-gray-400">{formatDateTR(a.date)} {a.time_slot}</p>
+                <p className="text-xs text-gray-400">{formatDateTR(a.date)} • {a.time_slot}</p>
                 <p className="text-xs text-gray-400">{a.customer_phone}</p>
                 {a.service && (
-                  <p className="text-xs font-bold text-brand-orange mt-1">{formatCurrency(a.service.price)}</p>
+                  <p className="text-xs font-bold mt-1" style={{ color: accent }}>{formatCurrency(a.service.price)}</p>
                 )}
-                {a.status === 'pending' && (
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => updateStatus(a.id, 'approved')}
-                      className="flex-1 text-xs bg-brand-green text-white py-2 rounded-lg font-semibold"
-                    >
-                      Onayla
+                <div className="flex gap-2 mt-3">
+                  {a.status === 'pending' && (
+                    <>
+                      <button onClick={() => updateStatus(a.id, 'approved')}
+                        className="flex-1 text-xs text-white py-2 rounded-lg font-semibold"
+                        style={{ backgroundColor: shop.theme_approved ?? '#1FA34A' }}>
+                        Onayla
+                      </button>
+                      <button onClick={() => updateStatus(a.id, 'rejected')}
+                        className="flex-1 text-xs py-2 rounded-lg font-semibold border"
+                        style={{ color: shop.theme_rejected ?? '#D72638', borderColor: `${shop.theme_rejected ?? '#D72638'}40` }}>
+                        Reddet
+                      </button>
+                    </>
+                  )}
+                  {(a.status === 'approved' || a.status === 'pending') && (
+                    <button onClick={() => updateStatus(a.id, 'cancelled')}
+                      className="flex-1 text-xs py-2 rounded-lg font-semibold border border-gray-200 text-gray-400">
+                      İptal Et
                     </button>
-                    <button
-                      onClick={() => updateStatus(a.id, 'rejected')}
-                      className="flex-1 text-xs bg-gray-100 text-brand-red py-2 rounded-lg font-semibold"
-                    >
-                      Reddet
-                    </button>
-                  </div>
-                )}
-                {a.status === 'approved' && (
-                  <button
-                    onClick={() => updateStatus(a.id, 'cancelled')}
-                    className="w-full mt-2 text-xs text-gray-400 border border-gray-200 py-1.5 rounded-lg"
-                  >
-                    İptal Et
-                  </button>
-                )}
+                  )}
+                </div>
               </Card>
             ))}
           </div>
