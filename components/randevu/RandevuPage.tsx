@@ -48,6 +48,8 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
   const [error, setError] = useState('')
   const [nameErr, setNameErr] = useState('')
   const [phoneErr, setPhoneErr] = useState('')
+  const [showTerms, setShowTerms] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const today = startOfDay(new Date())
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i))
@@ -109,6 +111,53 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
 
   return (
     <div className="min-h-screen bg-gray-50">
+
+      {/* HİZMET ŞARTLARI POPUP */}
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 animate-fade-in px-0 sm:px-4">
+          <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl animate-slide-up">
+            <div className="px-5 pt-5 pb-2 border-b border-gray-100">
+              <h3 className="text-lg font-black text-gray-900">Hizmet Şartları</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Randevu oluşturmadan önce lütfen okuyun</p>
+            </div>
+            <div className="px-5 py-4 max-h-64 overflow-y-auto text-sm text-gray-600 space-y-3">
+              <p><strong className="text-gray-900">1. Randevu Saati</strong><br />Randevu saatinize 10 dakika erken gelmenizi rica ederiz. Geç kalınması durumunda randevunuz iptal edilebilir.</p>
+              <p><strong className="text-gray-900">2. İptal Politikası</strong><br />Randevunuzu en az 2 saat öncesinden iptal etmenizi rica ederiz. İptal için randevu kodunuz ve telefon numaranız gereklidir.</p>
+              <p><strong className="text-gray-900">3. Kişisel Veriler</strong><br />Girdiğiniz ad ve telefon bilgileri yalnızca randevu yönetimi amacıyla kullanılır, üçüncü şahıslarla paylaşılmaz.</p>
+              <p><strong className="text-gray-900">4. Hizmet Değişikliği</strong><br />Salon, önceden haber vermeksizin hizmet fiyatlarını değiştirme hakkını saklı tutar.</p>
+              <p><strong className="text-gray-900">5. Sağlık</strong><br />Bulaşıcı hastalık belirtisi olan müşterilere hizmet verilmeyebilir.</p>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100">
+              <label className="flex items-start gap-3 cursor-pointer mb-4">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={e => setTermsAccepted(e.target.checked)}
+                  className="mt-0.5 w-5 h-5 rounded accent-orange-500 flex-shrink-0"
+                />
+                <span className="text-sm text-gray-700">Hizmet şartlarını okudum ve kabul ediyorum.</span>
+              </label>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowTerms(false); setTermsAccepted(false) }}
+                  className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-500"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={() => { if (termsAccepted) { setShowTerms(false); submitBooking() } }}
+                  disabled={!termsAccepted}
+                  className="flex-1 py-3 rounded-xl text-white text-sm font-black disabled:opacity-40 transition-all"
+                  style={{ backgroundColor: accent }}
+                >
+                  Onayla →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* TOP NAV */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -291,7 +340,7 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
                   </div>
                   {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
                   <button
-                    onClick={submitBooking}
+                    onClick={() => setShowTerms(true)}
                     disabled={submitting || !booking.time}
                     className="w-full py-3.5 rounded-xl text-white font-black text-base disabled:opacity-50 transition-all"
                     style={{ backgroundColor: accent }}
