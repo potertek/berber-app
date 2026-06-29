@@ -28,6 +28,8 @@ export interface Shop {
   theme_pending: string | null
   theme_approved: string | null
   theme_rejected: string | null
+  booking_name: string | null
+  booking_slug: string | null
   is_active: boolean
   owner_id: string
   created_at: string
@@ -122,6 +124,15 @@ export interface Revenue {
   appointments_total: number
   walkin_total: number
   staff_breakdown: { staff_id: string; name: string; total: number }[]
+}
+
+export interface ShopUser {
+  id: string
+  shop_id: string
+  username: string
+  password_hash: string
+  role: 'owner' | 'staff'
+  created_at: string
 }
 
 export const TIME_SLOTS = [
