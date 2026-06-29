@@ -10,7 +10,6 @@ import { generateTimeSlots } from '@/lib/slots'
 import { formatDateTR, formatCurrency, generateBookingCode } from '@/lib/utils'
 import { CATEGORY_LABELS } from '@/types'
 import type { Shop, Service, StaffMember, WorkingHours, Review, ServiceCategory } from '@/types'
-import { StarRating } from '@/components/ui/StarRating'
 
 interface Props {
   shop: Shop
@@ -302,23 +301,6 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
                 </div>
               </StepCard>
 
-              {/* YORUMLAR */}
-              {reviews.length > 0 && (
-                <div id="yorumlar" className="mt-4">
-                  <h2 className="text-lg font-black text-gray-900 mb-3">Yorumlar ({reviews.length})</h2>
-                  <div className="space-y-3">
-                    {reviews.map(r => (
-                      <div key={r.id} className="bg-white rounded-2xl border border-gray-100 shadow-soft p-4">
-                        <div className="flex items-start justify-between mb-1">
-                          <p className="font-bold text-sm text-gray-900">{r.customer_name}</p>
-                        </div>
-                        <StarRating rating={r.rating} size="sm" />
-                        {r.comment && <p className="text-sm text-gray-600 mt-2">{r.comment}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* INSTAGRAM */}
               {(shop.instagram_url || shop.instagram_username) && (

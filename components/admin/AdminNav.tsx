@@ -10,11 +10,11 @@ interface Props { slug: string }
 const NAV_ITEMS = [
   { href: '', label: 'Panel', icon: '📊' },
   { href: '/bookings', label: 'Randevular', icon: '📅' },
-  { href: '/walkin', label: 'Walk-in', icon: '🚶' },
+  { href: '/walkin', label: 'Kapıdan', icon: '🚶' },
   { href: '/services', label: 'Hizmetler', icon: '✂️' },
   { href: '/staff', label: 'Ekip', icon: '👥' },
   { href: '/revenue', label: 'Gelir', icon: '💰' },
-  { href: '/settings', label: 'Ayarlar', icon: '⚙️' },
+  { href: '/settings', label: 'Düzenle', icon: '✏️' },
 ]
 
 export function AdminNav({ slug }: Props) {
@@ -29,7 +29,7 @@ export function AdminNav({ slug }: Props) {
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-30">
-      <div className="flex overflow-x-auto">
+      <div className="flex overflow-x-auto scrollbar-hide">
         {NAV_ITEMS.map(({ href, label, icon }) => {
           const fullHref = base + href
           const isActive = href === '' ? pathname === base : pathname.startsWith(fullHref)
