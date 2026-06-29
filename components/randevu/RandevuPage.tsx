@@ -527,9 +527,9 @@ function ServicePicker({ services, selected, accent, onSelect }: { services: Ser
             </div>
             <div className="text-right">
               <p className="font-black text-sm" style={{ color: accent }}>{formatCurrency(s.price)}</p>
-              <button className="text-xs px-2 py-1 rounded-lg text-white mt-0.5" style={{ backgroundColor: accent }}>
+              <span className="text-xs px-2 py-1 rounded-lg text-white mt-0.5 inline-block" style={{ backgroundColor: accent }}>
                 Randevu al
-              </button>
+              </span>
             </div>
           </button>
         ))}
