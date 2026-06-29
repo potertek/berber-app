@@ -92,6 +92,12 @@ export default function SuperAdminPage() {
     setShops(prev => prev.map(s => s.id === shop.id ? { ...s, is_active: updated } : s))
   }
 
+  async function deleteShop(shop: Shop) {
+    if (!confirm(`"${shop.booking_name ?? shop.name}" salonunu kalıcı olarak silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz. Tüm randevular, hizmetler ve personel bilgileri silinecek.`)) return
+    await supabase.from('shops').delete().eq('id', shop.id)
+    setShops(prev => prev.filter(s => s.id !== shop.id))
+  }
+
   if (!authed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 px-6">
@@ -191,9 +197,15 @@ export default function SuperAdminPage() {
                     </Link>
                     <button
                       onClick={() => toggleShop(s)}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-semibold ${s.is_active ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}
+                      className={`text-xs px-3 py-1.5 rounded-lg font-semibold ${s.is_active ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}`}
                     >
                       {s.is_active ? 'Durdur' : 'Aktif Et'}
+                    </button>
+                    <button
+                      onClick={() => deleteShop(s)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-semibold bg-red-500/20 text-red-400"
+                    >
+                      Sil
                     </button>
                   </div>
                 </div>
