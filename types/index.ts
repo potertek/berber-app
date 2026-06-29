@@ -6,6 +6,7 @@ export interface Shop {
   id: string
   slug: string
   name: string
+  description: string | null
   logo_url: string | null
   banner_url: string | null
   phone: string | null
@@ -13,11 +14,20 @@ export interface Shop {
   address: string | null
   maps_url: string | null
   qr_url: string | null
+  instagram_url: string | null
   instagram_username: string | null
   instagram_bio: string | null
   instagram_followers: number | null
   instagram_following: number | null
   instagram_posts: number | null
+  instagram_photo_url: string | null
+  instagram_cta_text: string | null
+  theme_dominant: string | null
+  theme_accent: string | null
+  theme_button: string | null
+  theme_pending: string | null
+  theme_approved: string | null
+  theme_rejected: string | null
   is_active: boolean
   owner_id: string
   created_at: string

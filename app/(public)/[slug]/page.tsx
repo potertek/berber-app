@@ -10,6 +10,7 @@ import { ReviewsSection } from '@/components/public/ReviewsSection'
 import { InstagramSection } from '@/components/public/InstagramSection'
 import { AddressSection } from '@/components/public/AddressSection'
 import { StickyBookingBar } from '@/components/public/StickyBookingBar'
+import { getShopThemeVars } from '@/lib/slots'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -27,8 +28,10 @@ export default async function ShopPage({ params }: Props) {
     getReviewsByShop(shop.id),
   ])
 
+  const themeVars = getShopThemeVars(shop)
+
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen relative pb-28">
+    <div style={themeVars} className="max-w-md mx-auto bg-white min-h-screen relative pb-28">
       <HeroSection shop={shop} />
       <ServicesSection services={services} />
       <StaffSection staff={staff} />
@@ -36,7 +39,7 @@ export default async function ShopPage({ params }: Props) {
       <AddressSection shop={shop} />
       <ReviewsSection reviews={reviews} />
       <InstagramSection shop={shop} />
-      <StickyBookingBar shop={shop} services={services} staff={staff} />
+      <StickyBookingBar shop={shop} services={services} staff={staff} workingHours={workingHours} />
     </div>
   )
 }
@@ -47,6 +50,6 @@ export async function generateMetadata({ params }: Props) {
   if (!shop) return {}
   return {
     title: `${shop.name} — Randevu Al`,
-    description: `${shop.name} için online randevu alın`,
+    description: shop.description ?? `${shop.name} için online randevu alın`,
   }
 }
