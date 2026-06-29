@@ -94,6 +94,12 @@ export function SettingsView({ shop: initShop, workingHours: initHours }: Props)
               onChange={e => setShop(s => ({ ...s, name: e.target.value }))}
               placeholder="Berber"
             />
+            <Input
+              label="Randevu Sayfasında Görünen Ad"
+              value={shop.booking_name ?? ''}
+              onChange={e => setShop(s => ({ ...s, booking_name: e.target.value }))}
+              placeholder="Müşterinin gördüğü isim"
+            />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Açıklama</label>
               <textarea
@@ -112,7 +118,7 @@ export function SettingsView({ shop: initShop, workingHours: initHours }: Props)
             <Input label="Banner URL" value={shop.banner_url ?? ''} onChange={e => setShop(s => ({ ...s, banner_url: e.target.value }))} type="url" placeholder="https://..." />
             <Input label="QR Kod URL" value={shop.qr_url ?? ''} onChange={e => setShop(s => ({ ...s, qr_url: e.target.value }))} type="url" placeholder="https://..." />
             <Button
-              onClick={() => saveFields({ name: shop.name, description: shop.description, phone: shop.phone, whatsapp: shop.whatsapp, address: shop.address, maps_url: shop.maps_url, logo_url: shop.logo_url, banner_url: shop.banner_url, qr_url: shop.qr_url })}
+              onClick={() => saveFields({ name: shop.name, booking_name: shop.booking_name, description: shop.description, phone: shop.phone, whatsapp: shop.whatsapp, address: shop.address, maps_url: shop.maps_url, logo_url: shop.logo_url, banner_url: shop.banner_url, qr_url: shop.qr_url })}
               loading={saving}
               className="w-full"
             >

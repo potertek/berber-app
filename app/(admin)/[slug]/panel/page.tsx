@@ -8,7 +8,7 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
-export default async function AdminPage({ params }: Props) {
+export default async function PanelPage({ params }: Props) {
   const { slug } = await params
   const shop = await getShopBySlug(slug)
   if (!shop) notFound()
