@@ -93,7 +93,7 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
       const { error: err } = await supabase.from('appointments').insert({
         shop_id: shop.id, staff_id: selectedStaff.id, service_id: booking.service!.id,
         customer_name: booking.name, customer_phone: booking.phone,
-        date: booking.date, time_slot: booking.time, status: 'pending', booking_code: code, notes: null,
+        date: booking.date, time_slot: booking.time, status: 'approved', booking_code: code, notes: null,
       })
       if (err) throw err
       setBooking(b => ({ ...b, code }))
@@ -544,7 +544,7 @@ function SuccessScreen({ booking, shop, accent }: { booking: BookingSummary; sho
         <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl"
           style={{ backgroundColor: `${approvedColor}20`, color: approvedColor }}>✓</div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">Randevu Alındı!</h2>
-        <p className="text-sm text-gray-500 mb-6">Randevunuz onay bekliyor. Kodunuzu saklayın.</p>
+        <p className="text-sm text-gray-500 mb-6">Randevunuz onaylandı! Kodunuzu saklayın, iptal için gerekli.</p>
         <div className="bg-gray-50 rounded-xl p-4 mb-6">
           <p className="text-xs text-gray-400 mb-1">Randevu Kodunuz</p>
           <p className="text-3xl font-black tracking-widest" style={{ color: accent }}>{booking.code}</p>
