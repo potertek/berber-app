@@ -1,5 +1,5 @@
 export type Role = 'superadmin' | 'owner' | 'staff'
-export type BookingStatus = 'pending' | 'approved' | 'rejected' | 'cancelled'
+export type BookingStatus = 'pending' | 'approved' | 'cancelled'
 export type ServiceCategory = 'hair' | 'beard' | 'makeup' | 'skin'
 
 export interface Shop {
@@ -152,13 +152,11 @@ export const CATEGORY_LABELS: Record<ServiceCategory, string> = {
 export const STATUS_LABELS: Record<BookingStatus, string> = {
   pending: 'Bekliyor',
   approved: 'Onaylandı',
-  rejected: 'Reddedildi',
   cancelled: 'İptal Edildi',
 }
 
 export const STATUS_COLORS: Record<BookingStatus, string> = {
   pending: 'bg-orange-100 text-orange-700 border-orange-200',
   approved: 'bg-green-100 text-green-700 border-green-200',
-  rejected: 'bg-red-100 text-red-700 border-red-200',
   cancelled: 'bg-red-100 text-red-600 border-red-200',
 }

@@ -22,10 +22,10 @@ export function AdminDashboard({ shop, appointments, walkIns, staff }: Props) {
 
   const accent = shop.theme_accent ?? '#C85A17'
   const approvedColor = shop.theme_approved ?? '#1FA34A'
-  const rejectedColor = shop.theme_rejected ?? '#D72638'
+  const cancelledColor = shop.theme_rejected ?? '#D72638'
   const pendingColor = shop.theme_pending ?? '#F97316'
 
-  const todayAppts = appts.filter(a => a.date === today && a.status !== 'cancelled' && a.status !== 'rejected')
+  const todayAppts = appts.filter(a => a.date === today && a.status !== 'cancelled')
   const pendingCount = appts.filter(a => a.status === 'pending').length
   const todayWalkIns = walkIns.filter(w => w.date === today)
   const todayRevenue = todayWalkIns.reduce((s, w) => s + w.amount, 0)
@@ -41,8 +41,7 @@ export function AdminDashboard({ shop, appointments, walkIns, staff }: Props) {
     const map: Record<BookingStatus, { bg: string; color: string }> = {
       pending:   { bg: `${pendingColor}20`,   color: pendingColor },
       approved:  { bg: `${approvedColor}20`,  color: approvedColor },
-      rejected:  { bg: `${rejectedColor}20`,  color: rejectedColor },
-      cancelled: { bg: `${rejectedColor}15`,  color: rejectedColor },
+      cancelled: { bg: `${cancelledColor}15`, color: cancelledColor },
     }
     return map[status]
   }
@@ -93,13 +92,6 @@ export function AdminDashboard({ shop, appointments, walkIns, staff }: Props) {
                         style={{ backgroundColor: approvedColor }}
                       >
                         Onayla
-                      </button>
-                      <button
-                        onClick={() => updateStatus(a.id, 'rejected')}
-                        className="text-xs px-2.5 py-1.5 rounded-lg font-semibold border"
-                        style={{ color: rejectedColor, borderColor: `${rejectedColor}40` }}
-                      >
-                        Reddet
                       </button>
                     </div>
                   </div>

@@ -239,7 +239,7 @@ export function SettingsView({ shop: initShop, workingHours: initHours }: Props)
                 { key: 'theme_button', label: 'Buton Rengi', default: '#C85A17' },
                 { key: 'theme_pending', label: 'Bekliyor Rengi', default: '#F97316' },
                 { key: 'theme_approved', label: 'Onaylandı Rengi', default: '#1FA34A' },
-                { key: 'theme_rejected', label: 'Reddedildi Rengi', default: '#D72638' },
+                { key: 'theme_rejected', label: 'İptal Rengi', default: '#D72638' },
               ].map(({ key, label, default: def }) => (
                 <Card key={key}>
                   <div className="flex items-center justify-between gap-3">

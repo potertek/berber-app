@@ -66,7 +66,7 @@ export function BookingWizard({ shop, services, staff, workingHours, onClose }: 
         {step === 2 && <StepDate shop={shop} staff={booking.staff} workingHours={workingHours} selected={booking.date} onSelect={d => { update({ date: d }); next() }} />}
         {step === 3 && <StepTime shop={shop} staff={booking.staff} date={booking.date} workingHours={workingHours} selected={booking.time} onSelect={t => { update({ time: t }); next() }} />}
         {step === 4 && <StepContact name={booking.name} phone={booking.phone} onSubmit={(n, p) => { update({ name: n, phone: p }); next() }} shop={shop} />}
-        {step === 5 && <StepConfirm shop={shop} booking={booking} staff={staff} onClose={onClose} />}
+        {step === 5 && <StepConfirm shop={shop} booking={booking} onClose={onClose} />}
       </div>
 
       {step > 0 && step < 5 && (

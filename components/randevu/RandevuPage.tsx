@@ -7,7 +7,7 @@ import { format, addDays, startOfDay, isBefore } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { generateTimeSlots } from '@/lib/slots'
-import { formatDateTR, formatCurrency, generateBookingCode } from '@/lib/utils'
+import { formatDateTR, formatCurrency } from '@/lib/utils'
 import { CATEGORY_LABELS } from '@/types'
 import type { Shop, Service, StaffMember, WorkingHours, Review, ServiceCategory } from '@/types'
 
@@ -51,6 +51,14 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
   const [showTerms, setShowTerms] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
 
+  const [codeSent, setCodeSent] = useState(false)
+  const [phoneVerified, setPhoneVerified] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [sendingCode, setSendingCode] = useState(false)
+  const [verifyingCode, setVerifyingCode] = useState(false)
+  const [otpError, setOtpError] = useState('')
+  const [devOtpCode, setDevOtpCode] = useState<string | null>(null)
+
   const today = startOfDay(new Date())
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i))
 
@@ -68,37 +76,82 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
     setStep('time')
   }
 
+  async function sendOtpCode() {
+    if (!booking.phone.trim() || booking.phone.replace(/\D/g, '').length < 10) {
+      setPhoneErr('Geçerli telefon giriniz')
+      return
+    }
+    setPhoneErr('')
+    setOtpError('')
+    setSendingCode(true)
+    try {
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: booking.phone.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setCodeSent(true)
+      setDevOtpCode(data.devCode ?? null)
+      if (data.devCode) setOtpCode(data.devCode)
+    } catch (e) {
+      setOtpError(e instanceof Error ? e.message : 'Kod gönderilemedi')
+    }
+    setSendingCode(false)
+  }
+
+  async function verifyOtpCode() {
+    if (otpCode.trim().length !== 6) {
+      setOtpError('6 haneli kodu giriniz')
+      return
+    }
+    setVerifyingCode(true)
+    setOtpError('')
+    try {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: booking.phone.trim(), code: otpCode.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      setPhoneVerified(true)
+    } catch (e) {
+      setOtpError(e instanceof Error ? e.message : 'Kod doğrulanamadı')
+    }
+    setVerifyingCode(false)
+  }
+
   async function submitBooking() {
     let ne = '', pe = ''
     if (!booking.name.trim() || booking.name.trim().length < 2) ne = 'Ad soyad giriniz'
     if (!booking.phone.trim() || booking.phone.replace(/\D/g, '').length < 10) pe = 'Geçerli telefon giriniz'
     setNameErr(ne); setPhoneErr(pe)
     if (ne || pe) return
+    if (!phoneVerified) { setOtpError('Devam etmek için telefon numaranızı doğrulayın'); return }
 
     setSubmitting(true)
     setError('')
     try {
-      let selectedStaff = booking.staff
-      if (booking.noPreference) {
-        const { data: appts } = await supabase.from('appointments').select('staff_id').eq('shop_id', shop.id).eq('date', booking.date).in('status', ['pending', 'approved'])
-        const counts: Record<string, number> = {}
-        staff.forEach(s => { counts[s.id] = 0 })
-        appts?.forEach(a => { counts[a.staff_id] = (counts[a.staff_id] ?? 0) + 1 })
-        selectedStaff = [...staff].sort((a, b) => (counts[a.id] ?? 0) - (counts[b.id] ?? 0))[0] ?? staff[0]
-      }
-      if (!selectedStaff) throw new Error('Personel bulunamadı')
-
-      const { data: conflict } = await supabase.from('appointments').select('id').eq('shop_id', shop.id).eq('staff_id', selectedStaff.id).eq('date', booking.date).eq('time_slot', booking.time).in('status', ['pending', 'approved']).limit(1)
-      if (conflict && conflict.length > 0) { setError('Bu saat doldu. Lütfen başka saat seçin.'); setSubmitting(false); return }
-
-      const code = generateBookingCode()
-      const { error: err } = await supabase.from('appointments').insert({
-        shop_id: shop.id, staff_id: selectedStaff.id, service_id: booking.service!.id,
-        customer_name: booking.name, customer_phone: booking.phone,
-        date: booking.date, time_slot: booking.time, status: 'approved', booking_code: code, notes: null,
+      const res = await fetch('/api/appointments/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopId: shop.id,
+          staffId: booking.staff?.id ?? null,
+          noPreference: booking.noPreference,
+          serviceId: booking.service!.id,
+          date: booking.date,
+          timeSlot: booking.time,
+          customerName: booking.name,
+          customerPhone: booking.phone,
+          status: 'approved',
+        }),
       })
-      if (err) throw err
-      setBooking(b => ({ ...b, code }))
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Randevu oluşturulamadı. Tekrar deneyin.'); setSubmitting(false); return }
+      setBooking(b => ({ ...b, code: data.bookingCode }))
       setStep('done')
     } catch { setError('Randevu oluşturulamadı. Tekrar deneyin.') }
     setSubmitting(false)
@@ -332,16 +385,63 @@ export function RandevuPage({ shop, services, staff, workingHours, reviews }: Pr
                     <input
                       type="tel"
                       value={booking.phone}
-                      onChange={e => { setBooking(b => ({ ...b, phone: e.target.value })); setPhoneErr('') }}
+                      onChange={e => {
+                        setBooking(b => ({ ...b, phone: e.target.value }))
+                        setPhoneErr('')
+                        setCodeSent(false)
+                        setPhoneVerified(false)
+                        setOtpCode('')
+                        setDevOtpCode(null)
+                      }}
                       placeholder="0 5XX XXX XX XX"
+                      disabled={phoneVerified}
                       className={`w-full px-4 py-3 rounded-xl border-2 outline-none text-sm ${phoneErr ? 'border-red-300' : 'border-gray-200 focus:border-gray-400'}`}
                     />
                     {phoneErr && <p className="text-xs text-red-500 mt-1">{phoneErr}</p>}
+                    {!phoneVerified && (
+                      <button
+                        onClick={sendOtpCode}
+                        disabled={sendingCode}
+                        className="mt-2 text-xs font-bold px-3 py-2 rounded-lg border-2 disabled:opacity-50"
+                        style={{ borderColor: accent, color: accent }}
+                      >
+                        {sendingCode ? 'Gönderiliyor...' : codeSent ? 'Kodu Tekrar Gönder' : 'Kod Gönder'}
+                      </button>
+                    )}
+                    {phoneVerified && <p className="mt-2 text-xs font-bold text-green-600">✓ Telefon doğrulandı</p>}
                   </div>
+
+                  {codeSent && !phoneVerified && (
+                    <div>
+                      {devOtpCode && (
+                        <p className="mb-2 text-xs font-bold px-3 py-2 rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200">
+                          Demo modu — doğrulama kodu: {devOtpCode} (SMS sağlayıcı bağlanınca bu mesaj kalkar)
+                        </p>
+                      )}
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Doğrulama Kodu</label>
+                      <input
+                        type="text"
+                        value={otpCode}
+                        onChange={e => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="6 haneli kod"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-400 outline-none text-sm"
+                      />
+                      <button
+                        onClick={verifyOtpCode}
+                        disabled={verifyingCode}
+                        className="mt-2 w-full py-3 rounded-xl text-white font-bold text-sm disabled:opacity-50"
+                        style={{ backgroundColor: accent }}
+                      >
+                        {verifyingCode ? 'Doğrulanıyor...' : 'Kodu Doğrula'}
+                      </button>
+                    </div>
+                  )}
+
+                  {otpError && <p className="text-xs text-red-500">{otpError}</p>}
                   {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
                   <button
                     onClick={() => setShowTerms(true)}
-                    disabled={submitting || !booking.time}
+                    disabled={submitting || !booking.time || !phoneVerified}
                     className="w-full py-3.5 rounded-xl text-white font-black text-base disabled:opacity-50 transition-all"
                     style={{ backgroundColor: accent }}
                   >

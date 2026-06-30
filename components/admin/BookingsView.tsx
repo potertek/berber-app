@@ -6,7 +6,7 @@ import { AdminNav } from './AdminNav'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { formatDateTR, formatCurrency, generateBookingCode, getTodayString } from '@/lib/utils'
+import { formatDateTR, formatCurrency, getTodayString } from '@/lib/utils'
 import { STATUS_LABELS, STATUS_COLORS, TIME_SLOTS } from '@/types'
 import type { Shop, Appointment, BookingStatus, Service, StaffMember } from '@/types'
 import { supabase } from '@/lib/supabase'
@@ -47,22 +47,23 @@ export function BookingsView({ shop, appointments: init, services, staff }: Prop
     e.preventDefault()
     if (!form.customer_name || !form.customer_phone || !form.service_id || !form.staff_id) return
     setSaving(true)
-    const code = generateBookingCode()
-    const { data, error } = await supabase.from('appointments').insert({
-      shop_id: shop.id,
-      staff_id: form.staff_id,
-      service_id: form.service_id,
-      customer_name: form.customer_name,
-      customer_phone: form.customer_phone,
-      date: form.date,
-      time_slot: form.time_slot,
-      status: 'approved',
-      booking_code: code,
-      notes: 'Manuel eklendi',
-    }).select('*, staff:staff(*), service:services(*)').single()
+    const res = await fetch('/api/appointments/manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        shopId: shop.id,
+        staffId: form.staff_id,
+        serviceId: form.service_id,
+        date: form.date,
+        timeSlot: form.time_slot,
+        customerName: form.customer_name,
+        customerPhone: form.customer_phone,
+      }),
+    })
+    const data = await res.json()
 
-    if (!error && data) {
-      setAppts(prev => [data as Appointment, ...prev])
+    if (res.ok && data.appointment) {
+      setAppts(prev => [data.appointment as Appointment, ...prev])
       setForm({ customer_name: '', customer_phone: '', service_id: services[0]?.id ?? '', staff_id: staff[0]?.id ?? '', date: getTodayString(), time_slot: '09:00' })
       setShowForm(false)
     }
@@ -160,8 +161,8 @@ export function BookingsView({ shop, appointments: init, services, staff }: Prop
 
         {/* Filtre */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-          {(['all', 'approved', 'pending', 'cancelled', 'rejected'] as FilterStatus[]).map(f => {
-            const labels: Record<FilterStatus, string> = { all: 'Tümü', approved: 'Onaylı', pending: 'Bekleyen', cancelled: 'İptal', rejected: 'Reddedildi' }
+          {(['all', 'approved', 'pending', 'cancelled'] as FilterStatus[]).map(f => {
+            const labels: Record<FilterStatus, string> = { all: 'Tümü', approved: 'Onaylı', pending: 'Bekleyen', cancelled: 'İptal' }
             return (
               <button
                 key={f}
@@ -196,18 +197,11 @@ export function BookingsView({ shop, appointments: init, services, staff }: Prop
                 )}
                 <div className="flex gap-2 mt-3">
                   {a.status === 'pending' && (
-                    <>
-                      <button onClick={() => updateStatus(a.id, 'approved')}
-                        className="flex-1 text-xs text-white py-2 rounded-lg font-semibold"
-                        style={{ backgroundColor: shop.theme_approved ?? '#1FA34A' }}>
-                        Onayla
-                      </button>
-                      <button onClick={() => updateStatus(a.id, 'rejected')}
-                        className="flex-1 text-xs py-2 rounded-lg font-semibold border"
-                        style={{ color: shop.theme_rejected ?? '#D72638', borderColor: `${shop.theme_rejected ?? '#D72638'}40` }}>
-                        Reddet
-                      </button>
-                    </>
+                    <button onClick={() => updateStatus(a.id, 'approved')}
+                      className="flex-1 text-xs text-white py-2 rounded-lg font-semibold"
+                      style={{ backgroundColor: shop.theme_approved ?? '#1FA34A' }}>
+                      Onayla
+                    </button>
                   )}
                   {(a.status === 'approved' || a.status === 'pending') && (
                     <button onClick={() => updateStatus(a.id, 'cancelled')}

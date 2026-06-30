@@ -21,22 +21,17 @@ const config: Config = {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'premium': '0 4px 24px rgba(0,0,0,0.08)',
-        'card': '0 2px 12px rgba(0,0,0,0.06)',
+        premium: '0 4px 24px rgba(0,0,0,0.10)',
+        card: '0 2px 8px rgba(0,0,0,0.06)',
+        soft: '0 1px 4px rgba(0,0,0,0.08)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-in-out',
-        'slide-up': 'slideUp 0.3s ease-out',
+        'fade-in': 'fadeIn 0.25s ease',
+        'slide-up': 'slideUp 0.25s ease',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
-        slideUp: {
-          '0%': { transform: 'translateY(16px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
-        },
+        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+        slideUp: { '0%': { transform: 'translateY(12px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
       },
     },
   },

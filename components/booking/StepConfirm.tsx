@@ -2,19 +2,17 @@
 
 import { useState } from 'react'
 import { Card } from '@/components/ui/Card'
-import { formatDateTR, formatCurrency, generateBookingCode } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
-import type { Shop, StaffMember } from '@/types'
+import { formatDateTR, formatCurrency } from '@/lib/utils'
+import type { Shop } from '@/types'
 import type { BookingState } from './BookingWizard'
 
 interface Props {
   shop: Shop
   booking: BookingState
-  staff: StaffMember[]
   onClose: () => void
 }
 
-export function StepConfirm({ shop, booking, staff: allStaff, onClose }: Props) {
+export function StepConfirm({ shop, booking, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [code, setCode] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -27,56 +25,28 @@ export function StepConfirm({ shop, booking, staff: allStaff, onClose }: Props) 
     setLoading(true)
     setError(null)
     try {
-      let selectedStaff = booking.staff
-
-      if (booking.noPreference) {
-        const { data: appointments } = await supabase
-          .from('appointments')
-          .select('staff_id')
-          .eq('shop_id', shop.id)
-          .eq('date', booking.date)
-          .in('status', ['pending', 'approved'])
-
-        const busyCounts: Record<string, number> = {}
-        allStaff.forEach(s => { busyCounts[s.id] = 0 })
-        appointments?.forEach(a => { busyCounts[a.staff_id] = (busyCounts[a.staff_id] ?? 0) + 1 })
-        selectedStaff = [...allStaff].sort((a, b) => (busyCounts[a.id] ?? 0) - (busyCounts[b.id] ?? 0))[0] ?? allStaff[0]
-      }
-
-      if (!selectedStaff) throw new Error('Berber seçilemedi')
-
-      const { data: conflict } = await supabase
-        .from('appointments')
-        .select('id')
-        .eq('shop_id', shop.id)
-        .eq('staff_id', selectedStaff.id)
-        .eq('date', booking.date)
-        .eq('time_slot', booking.time)
-        .in('status', ['pending', 'approved'])
-        .limit(1)
-
-      if (conflict && conflict.length > 0) {
-        setError('Bu saat dolu. Lütfen geri dönüp başka bir saat seçin.')
+      const res = await fetch('/api/appointments/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopId: shop.id,
+          staffId: booking.staff?.id ?? null,
+          noPreference: booking.noPreference,
+          serviceId: booking.service!.id,
+          date: booking.date,
+          timeSlot: booking.time,
+          customerName: booking.name,
+          customerPhone: booking.phone,
+          status: 'pending',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'Randevu oluşturulamadı. Lütfen tekrar deneyin.')
         setLoading(false)
         return
       }
-
-      const bookingCode = generateBookingCode()
-      const { error: insertError } = await supabase.from('appointments').insert({
-        shop_id: shop.id,
-        staff_id: selectedStaff.id,
-        service_id: booking.service!.id,
-        customer_name: booking.name,
-        customer_phone: booking.phone,
-        date: booking.date,
-        time_slot: booking.time,
-        status: 'pending',
-        booking_code: bookingCode,
-        notes: null,
-      })
-
-      if (insertError) throw insertError
-      setCode(bookingCode)
+      setCode(data.bookingCode)
     } catch {
       setError('Randevu oluşturulamadı. Lütfen tekrar deneyin.')
     } finally {
