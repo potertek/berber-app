@@ -118,6 +118,14 @@ export async function getWorkingHours(shopId: string): Promise<WorkingHours[]> {
   return data ?? []
 }
 
+export async function getAllWorkingHours(shopId: string): Promise<WorkingHours[]> {
+  const { data } = await supabase
+    .from('working_hours')
+    .select('*')
+    .eq('shop_id', shopId)
+  return data ?? []
+}
+
 // ─── WALK-INS ─────────────────────────────────────────────
 export async function getWalkInsByShop(shopId: string): Promise<WalkIn[]> {
   const { data } = await supabase
