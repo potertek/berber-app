@@ -43,6 +43,16 @@ export function BookingsView({ shop, appointments: init, services, staff }: Prop
     setAppts(prev => prev.map(a => a.id === id ? { ...a, status: status as BookingStatus } : a))
   }
 
+  async function deleteAppointment(id: string) {
+    if (!confirm('Bu randevuyu silmek istediğinize emin misiniz?')) return
+    await fetch('/api/appointments/delete', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    setAppts(prev => prev.filter(a => a.id !== id))
+  }
+
   async function addManual(e: React.FormEvent) {
     e.preventDefault()
     if (!form.customer_name || !form.customer_phone || !form.service_id || !form.staff_id) return
@@ -207,6 +217,12 @@ export function BookingsView({ shop, appointments: init, services, staff }: Prop
                     <button onClick={() => updateStatus(a.id, 'cancelled')}
                       className="flex-1 text-xs py-2 rounded-lg font-semibold border border-gray-200 text-gray-400">
                       İptal Et
+                    </button>
+                  )}
+                  {a.status === 'cancelled' && (
+                    <button onClick={() => deleteAppointment(a.id)}
+                      className="flex-1 text-xs py-2 rounded-lg font-semibold border border-red-200 text-red-400">
+                      Sil
                     </button>
                   )}
                 </div>

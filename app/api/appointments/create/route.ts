@@ -30,20 +30,6 @@ export async function POST(req: NextRequest) {
 
   const admin = getSupabaseAdmin()
 
-  // Telefon numarası, son 5 dakika içinde doğrulanmış olmalı
-  const { data: otp } = await admin
-    .from('otp_codes')
-    .select('verified, created_at')
-    .eq('phone', customerPhone.trim())
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const otpRecent = otp && Date.now() - new Date(otp.created_at).getTime() < 5 * 60 * 1000
-  if (!otp || !otp.verified || !otpRecent) {
-    return NextResponse.json({ error: 'Telefon numarası doğrulanmamış' }, { status: 403 })
-  }
-
   let selectedStaffId = staffId
 
   if (noPreference) {
