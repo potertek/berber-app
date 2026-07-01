@@ -37,7 +37,7 @@ export function StepConfirm({ shop, booking, onClose }: Props) {
           timeSlot: booking.time,
           customerName: booking.name,
           customerPhone: booking.phone,
-          status: 'pending',
+          status: 'approved',
         }),
       })
       const data = await res.json()
@@ -61,7 +61,7 @@ export function StepConfirm({ shop, booking, onClose }: Props) {
           <span style={{ color: approvedColor }}>✓</span>
         </div>
         <h3 className="text-xl font-black mb-2" style={{ color: dominant }}>Randevu Alındı!</h3>
-        <p className="text-sm text-gray-500 text-center mb-6">Randevunuz onay bekliyor. Kodu saklayın, iptal için gerekli.</p>
+        <p className="text-sm text-gray-500 text-center mb-6">Randevunuz onaylandı! Kodu saklayın, iptal için gerekli.</p>
 
         <Card className="w-full text-center mb-4 py-5">
           <p className="text-xs text-gray-400 mb-2">Randevu Kodunuz</p>
