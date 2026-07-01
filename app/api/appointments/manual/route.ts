@@ -11,6 +11,21 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = getSupabaseAdmin()
+
+  const { data: conflict } = await admin
+    .from('appointments')
+    .select('id')
+    .eq('shop_id', shopId)
+    .eq('staff_id', staffId)
+    .eq('date', date)
+    .eq('time_slot', timeSlot)
+    .in('status', ['pending', 'approved'])
+    .limit(1)
+
+  if (conflict && conflict.length > 0) {
+    return NextResponse.json({ error: 'Bu saat dolu. Lütfen başka bir saat seçin.' }, { status: 409 })
+  }
+
   const bookingCode = generateBookingCode()
 
   const { data, error } = await admin

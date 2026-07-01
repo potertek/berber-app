@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
   let selectedStaffId = staffId
 
   if (noPreference) {
-    const { data: staffList } = await admin.from('staff').select('id').eq('shop_id', shopId).eq('is_active', true)
+    const { data: staffList, error: staffErr } = await admin.from('staff').select('id').eq('shop_id', shopId).eq('is_active', true)
+    if (staffErr) return NextResponse.json({ error: 'Personel listesi alınamadı' }, { status: 500 })
     const { data: busy } = await admin
       .from('appointments')
       .select('staff_id')

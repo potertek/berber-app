@@ -45,11 +45,12 @@ export function BookingsView({ shop, appointments: init, services, staff }: Prop
 
   async function deleteAppointment(id: string) {
     if (!confirm('Bu randevuyu silmek istediğinize emin misiniz?')) return
-    await fetch('/api/appointments/delete', {
+    const res = await fetch('/api/appointments/delete', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     })
+    if (!res.ok) { alert('Randevu silinemedi, tekrar deneyin.'); return }
     setAppts(prev => prev.filter(a => a.id !== id))
   }
 

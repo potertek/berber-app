@@ -75,19 +75,20 @@ export function StaffView({ shop, staff: init, workingHours: initHours }: Props)
     if (existing.length > 0) return
     const shopHours = hours.filter(h => h.staff_id === null)
     if (shopHours.length === 0) {
-      // Varsayılan saat ekle
       const payload = Array.from({ length: 7 }, (_, i) => ({
         shop_id: shop.id, staff_id: staffId,
         day_of_week: i, open_time: '09:00', close_time: '19:00', is_closed: i === 0,
       }))
-      const { data } = await supabase.from('working_hours').insert(payload).select()
+      const { data, error } = await supabase.from('working_hours').insert(payload).select()
+      if (error) { alert('Çalışma saatleri kaydedilemedi, tekrar deneyin.'); return }
       if (data) setHours(prev => [...prev, ...data])
     } else {
       const payload = shopHours.map(h => ({
         shop_id: shop.id, staff_id: staffId,
         day_of_week: h.day_of_week, open_time: h.open_time, close_time: h.close_time, is_closed: h.is_closed,
       }))
-      const { data } = await supabase.from('working_hours').insert(payload).select()
+      const { data, error } = await supabase.from('working_hours').insert(payload).select()
+      if (error) { alert('Çalışma saatleri kaydedilemedi, tekrar deneyin.'); return }
       if (data) setHours(prev => [...prev, ...data])
     }
   }

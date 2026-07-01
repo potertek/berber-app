@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-const SUPER_ADMIN_PASSWORD = 'super2025'
+const SUPER_ADMIN_PASSWORD = process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD ?? 'super2025'
 const SUPER_ADMIN_SESSION_KEY = 'sa_session'
 const SHOP_SESSION_PREFIX = 'shop_session_'
 
@@ -26,10 +26,20 @@ export function superAdminLogout() {
 
 // ── SHOP ADMIN ───────────────────────────────────────────
 export async function shopLogin(slug: string, username: string, password: string): Promise<boolean> {
+  const { data: shopData } = await supabase
+    .from('shops')
+    .select('id')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .single()
+
+  if (!shopData) return false
+
   const { data } = await supabase
     .from('shop_users')
     .select('id, password_hash, shop_id')
     .eq('username', username)
+    .eq('shop_id', shopData.id)
     .single()
 
   if (!data) return false
